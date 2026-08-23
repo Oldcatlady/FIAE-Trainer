@@ -1,0 +1,2096 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>FIAE Trainer – Dashboard</title>
+
+
+    <!-- ============================================================
+         FOOTER
+         ------------------------------------------------------------
+         Diese CSS-Datei gehört zur zentralen Footer-Struktur.
+         Sie wird auf den geschützten Hauptseiten eingebunden.
+         ============================================================ -->
+
+    <link
+        rel="stylesheet"
+        href="/footer-style.css">
+
+
+    <style>
+
+        /* ============================================================
+           GRUNDSTRUKTUR
+           ============================================================ */
+
+        * {
+
+            box-sizing: border-box;
+
+            margin: 0;
+
+            padding: 0;
+
+        }
+
+
+        :root {
+
+            --card-bg:
+                rgba(255, 255, 255, 0.94);
+
+            --card-a:
+                #ffffff;
+
+            --card-b:
+                #ffffff;
+
+            /*
+             * Diese Variablen werden vom globalen Header ebenfalls
+             * verwendet.
+             */
+
+            --header-bg:
+                rgba(255, 255, 255, 0.9);
+
+            --theme-ring:
+                var(--accent);
+
+            --menu-btn-bg:
+                rgba(255, 255, 255, 0.9);
+
+            --menu-btn-fg:
+                var(--text-main);
+
+            --text-main:
+                #1f2937;
+
+            --text-muted:
+                #6b7280;
+
+            --accent:
+                #315efb;
+
+            --accent-hover:
+                #244bd1;
+
+            --correct:
+                #2e9b68;
+
+            --wrong:
+                #d94b4b;
+
+            --border:
+                color-mix(
+                    in srgb,
+                    var(--text-muted) 28%,
+                    transparent
+                );
+
+            --disabled:
+                color-mix(
+                    in srgb,
+                    var(--text-muted) 45%,
+                    transparent
+                );
+
+            --shadow:
+                0 4px 22px rgba(0, 0, 0, 0.12);
+
+        }
+
+
+        body {
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            color:
+                var(--text-main);
+
+            min-height:
+                100vh;
+
+            transition:
+                color 0.25s ease;
+
+        }
+
+
+        /* ============================================================
+           AUTHENTICATION LOADING
+           ------------------------------------------------------------
+           Das Dashboard wird zunächst ausgeblendet, während Firebase
+           prüft, ob bereits ein Benutzer angemeldet ist.
+
+           Dadurch wird verhindert, dass der geschützte Dashboard-
+           Inhalt kurz sichtbar wird, bevor ein nicht angemeldeter
+           Benutzer zu login.html weitergeleitet wird.
+           ============================================================ */
+
+        body.auth-checking > *:not(#authLoading) {
+
+            visibility:
+                hidden;
+
+        }
+
+
+        #authLoading {
+
+            position:
+                fixed;
+
+            inset:
+                0;
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            background:
+                #0d1b12;
+
+            color:
+                white;
+
+            font-size:
+                16px;
+
+            z-index:
+                9999;
+
+        }
+
+
+        body:not(.auth-checking) #authLoading {
+
+            display:
+                none;
+
+        }
+
+
+        /* ============================================================
+           MAIN
+           ============================================================ */
+
+        main {
+
+            width:
+                min(
+                    1100px,
+                    calc(100% - 40px)
+                );
+
+            margin:
+                40px auto 70px;
+
+        }
+
+
+        .welcome {
+
+            margin-bottom:
+                30px;
+
+        }
+
+
+        .welcome h1 {
+
+            font-size:
+                30px;
+
+            margin-bottom:
+                8px;
+
+            color:
+                var(--text-main);
+
+        }
+
+
+        .welcome p {
+
+            color:
+                var(--text-muted);
+
+        }
+
+
+        /* ============================================================
+           LEARNING CARD
+           ============================================================ */
+
+        .learning-card {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--card-a),
+                    var(--card-b)
+                );
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                14px;
+
+            padding:
+                30px;
+
+            box-shadow:
+                var(--shadow);
+
+        }
+
+
+        .learning-card h2 {
+
+            font-size:
+                21px;
+
+            margin-bottom:
+                25px;
+
+            color:
+                var(--text-main);
+
+        }
+
+
+        .form-group {
+
+            margin-bottom:
+                20px;
+
+        }
+
+
+        .form-group label {
+
+            display:
+                block;
+
+            font-size:
+                14px;
+
+            font-weight:
+                600;
+
+            margin-bottom:
+                8px;
+
+            color:
+                var(--text-main);
+
+        }
+
+
+        select {
+
+            width:
+                100%;
+
+            height:
+                48px;
+
+            padding:
+                0 14px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                8px;
+
+            background:
+                var(--card-bg);
+
+            color:
+                var(--text-main);
+
+            font-size:
+                15px;
+
+        }
+
+
+        select:disabled {
+
+            color:
+                var(--disabled);
+
+            cursor:
+                not-allowed;
+
+        }
+
+
+        select.invalid {
+
+            border:
+                2px solid var(--wrong);
+
+        }
+
+
+        .error-message {
+
+            display:
+                none;
+
+            margin-top:
+                7px;
+
+            color:
+                var(--wrong);
+
+            font-size:
+                13px;
+
+        }
+
+
+        .error-message.visible {
+
+            display:
+                block;
+
+        }
+
+
+        /* ============================================================
+           QUIZ TYPES
+           ============================================================ */
+
+        .quiz-types {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap:
+                12px;
+
+        }
+
+
+        .quiz-type {
+
+            min-height:
+                55px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                9px;
+
+            background:
+                var(--card-bg);
+
+            color:
+                var(--text-main);
+
+            cursor:
+                pointer;
+
+            font-size:
+                14px;
+
+            font-weight:
+                600;
+
+        }
+
+
+        .quiz-type:hover:not(:disabled) {
+
+            border-color:
+                var(--accent);
+
+        }
+
+
+        .quiz-type.selected {
+
+            border:
+                2px solid var(--accent);
+
+            color:
+                var(--accent);
+
+            background:
+                color-mix(
+                    in srgb,
+                    var(--accent) 10%,
+                    transparent
+                );
+
+        }
+
+
+        .quiz-type:disabled {
+
+            color:
+                var(--disabled);
+
+            cursor:
+                not-allowed;
+
+        }
+
+
+        /* ============================================================
+           FRAGENANZAHL-STEPPER
+           ============================================================ */
+
+        .stepper {
+
+            display:
+                flex;
+
+            align-items:
+                stretch;
+
+            width:
+                100%;
+
+            max-width:
+                260px;
+
+            border:
+                1px solid var(--border);
+
+            border-radius:
+                8px;
+
+            overflow:
+                hidden;
+
+        }
+
+
+        .stepper-btn {
+
+            width:
+                52px;
+
+            border:
+                none;
+
+            background:
+                var(--card-bg);
+
+            color:
+                var(--accent);
+
+            font-size:
+                20px;
+
+            font-weight:
+                700;
+
+            cursor:
+                pointer;
+
+        }
+
+
+        .stepper-btn:hover {
+
+            background:
+                color-mix(
+                    in srgb,
+                    var(--accent) 12%,
+                    transparent
+                );
+
+        }
+
+
+        .stepper-value {
+
+            flex:
+                1;
+
+            height:
+                48px;
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                center;
+
+            font-size:
+                17px;
+
+            font-weight:
+                700;
+
+            color:
+                var(--text-main);
+
+            background:
+                var(--card-bg);
+
+            border-left:
+                1px solid var(--border);
+
+            border-right:
+                1px solid var(--border);
+
+            user-select:
+                none;
+
+        }
+
+
+        /* ============================================================
+           START BUTTON
+           ============================================================ */
+
+        .start-container {
+
+            margin-top:
+                30px;
+
+            text-align:
+                center;
+
+        }
+
+
+        #startQuiz {
+
+            width:
+                min(
+                    220px,
+                    100%
+                );
+
+            height:
+                52px;
+
+            border:
+                none;
+
+            border-radius:
+                9px;
+
+            background:
+                var(--accent);
+
+            color:
+                white;
+
+            font-size:
+                16px;
+
+            font-weight:
+                700;
+
+            cursor:
+                pointer;
+
+        }
+
+
+        #startQuiz:hover {
+
+            background:
+                var(--accent-hover);
+
+        }
+
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+
+        @media (max-width: 700px) {
+
+            main {
+
+                width:
+                    calc(100% - 24px);
+
+                margin-top:
+                    25px;
+
+            }
+
+
+            .learning-card {
+
+                padding:
+                    20px;
+
+            }
+
+
+            .quiz-types {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+
+            .welcome h1 {
+
+                font-size:
+                    25px;
+
+            }
+
+
+            .stepper {
+
+                max-width:
+                    none;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body class="theme-einhorn auth-checking">
+    <!-- ============================================================
+     GLOBALER HEADER
+     ============================================================ -->
+    <!-- ============================================================
+         AUTHENTICATION LOADING
+         ============================================================ -->
+    <div id="authLoading">
+        Anmeldung wird geprüft …
+    </div>
+
+    <!-- ============================================================
+         GLOBALER HEADER
+         ------------------------------------------------------------
+         Der komplette Header wird aus header-global.html geladen.
+
+         header-global.html enthält:
+             - FIAE TRAINER Logo
+             - Theme-Button
+             - Hamburger-Menü
+             - Navigation
+             - Theme-System
+             - Theme-Animationen
+             - globales Logout-Event
+
+         Diese Seite enthält KEINE eigene Header-Implementierung.
+         ============================================================ -->
+         
+    <div id="globalHeaderContainer"></div>
+    <!-- ============================================================
+         HAUPTINHALT
+         ============================================================ -->
+
+    <main>
+
+
+        <section class="welcome">
+
+
+            <h1 id="welcomeTitle">
+
+                Willkommen zurück!
+
+            </h1>
+
+
+            <p id="welcomeText">
+
+                Wähle aus, was du heute lernen möchtest.
+
+            </p>
+
+
+        </section>
+
+
+        <!-- ========================================================
+             AUSWAHL
+             ======================================================== -->
+
+        <section class="learning-card">
+
+
+            <h2>
+
+                Auswahl
+
+            </h2>
+
+
+            <!-- ====================================================
+                 SEMESTER
+                 ==================================================== -->
+
+            <div class="form-group">
+
+
+                <label for="semester">
+
+                    Semester
+
+                </label>
+
+
+                <select id="semester">
+
+
+                    <option value="">
+
+                        Semester auswählen
+
+                    </option>
+
+
+                    <option value="1">
+
+                        1. Semester
+
+                    </option>
+
+
+                    <option value="2">
+
+                        2. Semester
+
+                    </option>
+
+
+                    <option value="extra">
+
+                        Extra
+
+                    </option>
+
+
+                </select>
+
+
+            </div>
+
+
+            <!-- ====================================================
+                 FACH
+                 ==================================================== -->
+
+            <div class="form-group">
+
+
+                <label for="subject">
+
+                    Fach
+
+                </label>
+
+
+                <select
+                    id="subject"
+                    disabled>
+
+
+                    <option value="">
+
+                        Erst Semester auswählen
+
+                    </option>
+
+
+                </select>
+
+
+                <div
+                    id="subjectError"
+                    class="error-message">
+
+                    Bitte wähle zuerst ein Fach aus.
+
+                </div>
+
+
+            </div>
+
+
+            <!-- ====================================================
+                 THEMA
+                 ==================================================== -->
+
+            <div class="form-group">
+
+
+                <label for="topic">
+
+                    Thema
+
+                </label>
+
+
+                <select
+                    id="topic"
+                    disabled>
+
+
+                    <option value="">
+
+                        Erst Fach auswählen
+
+                    </option>
+
+
+                </select>
+
+
+                <div
+                    id="topicError"
+                    class="error-message">
+
+                    Bitte wähle zuerst ein Thema aus.
+
+                </div>
+
+
+            </div>
+
+
+            <!-- ====================================================
+                 FRAGENANZAHL
+                 ==================================================== -->
+
+            <div class="form-group">
+
+
+                <label
+                    id="questionCountLabel"
+                    for="questionCountValue">
+
+                    Wie viele Fragen bearbeiten?
+
+                </label>
+
+
+                <div class="stepper">
+
+
+                    <button
+                        type="button"
+                        class="stepper-btn"
+                        id="questionCountDown"
+                        aria-label="Weniger Fragen">
+
+                        −
+
+                    </button>
+
+
+                    <div
+                        class="stepper-value"
+                        id="questionCountValue"
+                        role="spinbutton"
+                        aria-labelledby="questionCountLabel"
+                        aria-valuemin="5"
+                        aria-valuemax="40"
+                        aria-valuenow="10">
+
+                        10
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="stepper-btn"
+                        id="questionCountUp"
+                        aria-label="Mehr Fragen">
+
+                        +
+
+                    </button>
+
+
+                </div>
+
+
+            </div>
+
+
+            <!-- ====================================================
+                 QUIZART
+                 ==================================================== -->
+
+            <div class="form-group">
+
+
+                <label>
+
+                    Quizart
+
+                </label>
+
+
+                <div class="quiz-types">
+
+
+                    <button
+                        class="quiz-type"
+                        data-type="multiple-choice">
+
+                        Multiple Choice
+
+                    </button>
+
+
+                    <button
+                        class="quiz-type"
+                        data-type="flashcards">
+
+                        Flashcards
+
+                    </button>
+
+
+                    <button
+                        class="quiz-type"
+                        data-type="input">
+
+                        Benutzer-Eingabe
+
+                    </button>
+
+
+                </div>
+
+
+                <div
+                    id="quizTypeError"
+                    class="error-message">
+
+                    Bitte wähle eine Quizart aus.
+
+                </div>
+
+
+            </div>
+
+
+            <!-- ====================================================
+                 START
+                 ==================================================== -->
+
+            <div class="start-container">
+
+
+                <button id="startQuiz">
+
+                    QUIZ STARTEN
+
+                </button>
+
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+    <!-- ============================================================
+         FOOTER
+         ------------------------------------------------------------
+         Die bestehende Footer-Struktur bleibt unverändert.
+         ============================================================ -->
+
+    <footer id="siteFooter">
+
+        <!--
+            Der bestehende Footer wird über footer-app.js aufgebaut.
+        -->
+
+    </footer>
+
+
+    <!-- ============================================================
+         FIREBASE / DASHBOARD
+         ------------------------------------------------------------
+         firebase-config.js enthält ausschließlich die zentrale
+         Firebase-Konfiguration.
+
+         Firebase Authentication wird hier für das geschützte
+         Dashboard verwendet.
+
+         Es wird KEINE questions.json geladen.
+         Es wird KEINE Quiz-Datenbank angesprochen.
+         ============================================================ -->
+
+    <script type="module">
+
+
+        /* ============================================================
+           GLOBALEN HEADER LADEN
+           ------------------------------------------------------------
+           header-global.html ist KEINE vollständige HTML-Seite.
+
+           Deshalb wird die Datei per fetch geladen.
+
+           Die enthaltenen <style>- und <script>-Bereiche werden
+           anschließend separat in das Dokument übernommen.
+           ============================================================ */
+
+        async function loadGlobalHeader() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        "header-global.html"
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "header-global.html konnte nicht geladen werden."
+                    );
+
+                }
+
+
+                const headerHtml =
+                    await response.text();
+
+
+                const parser =
+                    new DOMParser();
+
+
+                const headerDocument =
+                    parser.parseFromString(
+                        headerHtml,
+                        "text/html"
+                    );
+
+
+                const container =
+                    document.getElementById(
+                        "globalHeaderContainer"
+                    );
+
+
+                /*
+                 * ----------------------------------------------------
+                 * STYLE AUS GLOBALER HEADER-DATEI ÜBERNEHMEN
+                 * ----------------------------------------------------
+                 */
+
+                headerDocument
+                    .querySelectorAll("style")
+                    .forEach(
+                        (styleElement) => {
+
+                            const style =
+                                document.createElement(
+                                    "style"
+                                );
+
+                            style.textContent =
+                                styleElement.textContent;
+
+                            document.head.appendChild(
+                                style
+                            );
+
+                        }
+                    );
+
+
+                /*
+                 * ----------------------------------------------------
+                 * HTML DES GLOBALEN HEADERS ÜBERNEHMEN
+                 * ----------------------------------------------------
+                 *
+                 * Wir übernehmen alle sichtbaren Elemente aus dem
+                 * Body von header-global.html.
+                 */
+
+                Array.from(
+                    headerDocument.body.children
+                ).forEach(
+                    (element) => {
+
+                        if (
+                            element.tagName !==
+                            "SCRIPT"
+                        ) {
+
+                            container.appendChild(
+                                document.importNode(
+                                    element,
+                                    true
+                                )
+                            );
+
+                        }
+
+                    }
+                );
+
+
+                /*
+                 * ----------------------------------------------------
+                 * JAVASCRIPT DES GLOBALEN HEADERS AUSFÜHREN
+                 * ----------------------------------------------------
+                 *
+                 * Script-Tags werden bei innerHTML/fetch nicht
+                 * automatisch ausgeführt.
+                 *
+                 * Deshalb wird das Script hier bewusst neu erzeugt.
+                 */
+
+                headerDocument
+                    .querySelectorAll("script")
+                    .forEach(
+                        (scriptElement) => {
+
+                            const script =
+                                document.createElement(
+                                    "script"
+                                );
+
+
+                            if (
+                                scriptElement.src
+                            ) {
+
+                                script.src =
+                                    scriptElement.src;
+
+                            } else {
+
+                                script.textContent =
+                                    scriptElement.textContent;
+
+                            }
+
+
+                            document.body.appendChild(
+                                script
+                            );
+
+                        }
+                    );
+
+
+            } catch (error) {
+
+                console.error(
+                    "Globaler Header konnte nicht geladen werden:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        /*
+         * Globalen Header laden.
+         */
+
+        await loadGlobalHeader();
+
+
+
+        /* ============================================================
+           FIREBASE IMPORTS
+           ============================================================ */
+
+        import {
+
+            initializeApp
+
+        } from
+            "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+
+
+        import {
+
+            getAuth,
+            onAuthStateChanged,
+            signOut
+
+        } from
+            "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
+
+        import {
+
+            firebaseConfig
+
+        } from
+            "./firebase-config.js";
+
+
+
+        /* ============================================================
+           FIREBASE INITIALISIEREN
+           ============================================================ */
+
+        const firebaseApp =
+            initializeApp(
+                firebaseConfig
+            );
+
+
+        const auth =
+            getAuth(
+                firebaseApp
+            );
+
+
+
+        /* ============================================================
+           ELEMENTE
+           ============================================================ */
+
+        const authLoading =
+            document.getElementById(
+                "authLoading"
+            );
+
+
+        const welcomeTitle =
+            document.getElementById(
+                "welcomeTitle"
+            );
+
+
+        const subjectSelect =
+            document.getElementById(
+                "subject"
+            );
+
+
+        const topicSelect =
+            document.getElementById(
+                "topic"
+            );
+
+
+        const semesterSelect =
+            document.getElementById(
+                "semester"
+            );
+
+
+        const startQuiz =
+            document.getElementById(
+                "startQuiz"
+            );
+
+
+        const quizTypeButtons =
+            document.querySelectorAll(
+                ".quiz-type"
+            );
+
+
+
+        /* ============================================================
+           FIREBASE AUTHENTICATION GUARD
+           ------------------------------------------------------------
+           Das ist der entscheidende Schutz für quizBit.html.
+
+           Firebase entscheidet, ob aktuell ein Benutzer angemeldet
+           ist.
+
+           Angemeldet:
+               Dashboard anzeigen.
+
+           Nicht angemeldet:
+               Weiterleitung zu login.html.
+           ============================================================ */
+
+        onAuthStateChanged(
+            auth,
+            (user) => {
+
+
+                if (!user) {
+
+                    window.location.replace(
+                        "login.html"
+                    );
+
+                    return;
+
+                }
+
+
+                /*
+                 * Benutzer ist authentifiziert.
+                 * Jetzt darf das Dashboard sichtbar werden.
+                 */
+
+                document.body.classList.remove(
+                    "auth-checking"
+                );
+
+
+                /*
+                 * Falls Firebase eine E-Mail liefert, verwenden wir
+                 * diese zunächst als persönliche Begrüßung.
+                 */
+
+                if (user.email) {
+
+                    welcomeTitle.textContent =
+                        "Willkommen zurück!";
+
+                }
+
+            }
+        );
+
+
+
+        /* ============================================================
+           TESTDATEN FÜR DIE AUSWAHL
+           ------------------------------------------------------------
+           Diese Daten dienen ausschließlich der Navigation innerhalb
+           des Dashboards.
+
+           Sie sind NICHT die spätere Quiz-Datenquelle.
+
+           Es wird hier ausdrücklich keine questions.json verwendet.
+           ============================================================ */
+
+        const learningData = {
+
+
+            "Java": {
+
+
+                "Schleifen": [
+
+                    "for-Schleifen",
+                    "while-Schleifen",
+                    "do-while-Schleifen"
+
+                ],
+
+
+                "Arrays": [
+
+                    "Arrays Grundlagen",
+                    "Arrays bearbeiten"
+
+                ],
+
+
+                "Bedingungen": [
+
+                    "if / else",
+                    "switch"
+
+                ]
+
+            },
+
+
+            "Datenbanken": {
+
+
+                "SQL": [
+
+                    "SELECT",
+                    "WHERE",
+                    "JOIN"
+
+                ],
+
+
+                "MariaDB": [
+
+                    "Tabellen",
+                    "Datentypen"
+
+                ]
+
+            },
+
+
+            "Webentwicklung": {
+
+
+                "HTML": [
+
+                    "Elemente",
+                    "Formulare"
+
+                ],
+
+
+                "CSS": [
+
+                    "Selektoren",
+                    "Layout"
+
+                ]
+
+            }
+
+        };
+
+
+
+        /* ============================================================
+           FÄCHER PRO SEMESTER
+           ============================================================ */
+
+        const semesterSubjects = {
+
+
+            "1": [
+
+                "Betriebssysteme / Windows",
+                "Betriebssysteme / Linux",
+                "Datenbanken / MariaDB",
+                "Digitaltechnik",
+                "Telekommunikationstechnik",
+                "Netzwerktechnik",
+                "Programmiertechnik / Java",
+                "Systemtechnik",
+                "Webseiten",
+                "WiSo"
+
+            ],
+
+
+            "2": [
+
+                "Betriebssysteme / Windows",
+                "Datenbanken / MariaDB",
+                "Telekommunikationstechnik",
+                "Programmiertechnik / Java",
+                "WiSo",
+                "IoT",
+                "Docker",
+                "Android"
+
+            ],
+
+
+            "extra":
+                Object.keys(
+                    learningData
+                )
+
+        };
+
+
+
+        /* ============================================================
+           SEMESTER → FÄCHER
+           ============================================================ */
+
+        semesterSelect.addEventListener(
+            "change",
+            () => {
+
+
+                const semester =
+                    semesterSelect.value;
+
+
+                subjectSelect.innerHTML =
+                    '<option value="">Fach auswählen</option>';
+
+
+                topicSelect.innerHTML =
+                    '<option value="">Erst Fach auswählen</option>';
+
+
+                topicSelect.disabled =
+                    true;
+
+
+                if (!semester) {
+
+                    subjectSelect.disabled =
+                        true;
+
+                    return;
+
+                }
+
+
+                subjectSelect.disabled =
+                    false;
+
+
+                semesterSubjects[
+                    semester
+                ].forEach(
+                    (subject) => {
+
+
+                        const option =
+                            document.createElement(
+                                "option"
+                            );
+
+
+                        option.value =
+                            subject;
+
+
+                        option.textContent =
+                            subject;
+
+
+                        subjectSelect.appendChild(
+                            option
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+
+        /* ============================================================
+           FACH → THEMEN
+           ============================================================ */
+
+        subjectSelect.addEventListener(
+            "change",
+            () => {
+
+
+                const subject =
+                    subjectSelect.value;
+
+
+                topicSelect.innerHTML =
+                    '<option value="">Thema auswählen</option>';
+
+
+                if (!subject) {
+
+                    topicSelect.disabled =
+                        true;
+
+                    return;
+
+                }
+
+
+                topicSelect.disabled =
+                    false;
+
+
+                const topics =
+                    learningData[subject]
+                        ? Object.keys(
+                            learningData[subject]
+                        )
+                        : [
+                            "Alle Themen"
+                        ];
+
+
+                topics.forEach(
+                    (topic) => {
+
+
+                        const option =
+                            document.createElement(
+                                "option"
+                            );
+
+
+                        option.value =
+                            topic;
+
+
+                        option.textContent =
+                            topic;
+
+
+                        topicSelect.appendChild(
+                            option
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+
+        /* ============================================================
+           QUIZART
+           ============================================================ */
+
+        let selectedQuizType =
+            null;
+
+
+        quizTypeButtons.forEach(
+            (button) => {
+
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+
+                        quizTypeButtons.forEach(
+                            (btn) => {
+
+                                btn.classList.remove(
+                                    "selected"
+                                );
+
+                            }
+                        );
+
+
+                        button.classList.add(
+                            "selected"
+                        );
+
+
+                        selectedQuizType =
+                            button.dataset.type;
+
+                    }
+                );
+
+            }
+        );
+
+
+
+        /* ============================================================
+           FRAGENANZAHL
+           ============================================================ */
+
+        const questionCounts = [
+
+            5,
+            10,
+            15,
+            20,
+            25,
+            30,
+            35,
+            40
+
+        ];
+
+
+        let questionCountIndex =
+            questionCounts.indexOf(
+                10
+            );
+
+
+        const questionCountValue =
+            document.getElementById(
+                "questionCountValue"
+            );
+
+
+        const questionCountUp =
+            document.getElementById(
+                "questionCountUp"
+            );
+
+
+        const questionCountDown =
+            document.getElementById(
+                "questionCountDown"
+            );
+
+
+
+        function renderQuestionCount() {
+
+
+            const value =
+                questionCounts[
+                    questionCountIndex
+                ];
+
+
+            questionCountValue.textContent =
+                value;
+
+
+            questionCountValue.setAttribute(
+                "aria-valuenow",
+                value
+            );
+
+        }
+
+
+
+        questionCountUp.addEventListener(
+            "click",
+            () => {
+
+
+                questionCountIndex =
+                    (
+                        questionCountIndex +
+                        1
+                    ) %
+                    questionCounts.length;
+
+
+                renderQuestionCount();
+
+            }
+        );
+
+
+
+        questionCountDown.addEventListener(
+            "click",
+            () => {
+
+
+                questionCountIndex =
+                    (
+                        questionCountIndex -
+                        1 +
+                        questionCounts.length
+                    ) %
+                    questionCounts.length;
+
+
+                renderQuestionCount();
+
+            }
+        );
+
+
+
+        /* ============================================================
+           QUIZ STARTEN
+           ------------------------------------------------------------
+           Hier wird noch keine Quizlogik ausgeführt.
+
+           Das Dashboard übergibt ausschließlich die vom Benutzer
+           getroffene Auswahl an quiz.html.
+
+           Die eigentlichen Fragen werden später über die Datenbank
+           bereitgestellt.
+           ============================================================ */
+
+        startQuiz.addEventListener(
+            "click",
+            () => {
+
+
+                let valid =
+                    true;
+
+
+
+                /* ----------------------------------------------------
+                   FACH PRÜFEN
+                   ---------------------------------------------------- */
+
+                if (!subjectSelect.value) {
+
+
+                    subjectSelect.classList.add(
+                        "invalid"
+                    );
+
+
+                    document
+                        .getElementById(
+                            "subjectError"
+                        )
+                        .classList.add(
+                            "visible"
+                        );
+
+
+                    valid =
+                        false;
+
+
+                } else {
+
+
+                    subjectSelect.classList.remove(
+                        "invalid"
+                    );
+
+
+                    document
+                        .getElementById(
+                            "subjectError"
+                        )
+                        .classList.remove(
+                            "visible"
+                        );
+
+                }
+
+
+
+                /* ----------------------------------------------------
+                   THEMA PRÜFEN
+                   ---------------------------------------------------- */
+
+                if (!topicSelect.value) {
+
+
+                    topicSelect.classList.add(
+                        "invalid"
+                    );
+
+
+                    document
+                        .getElementById(
+                            "topicError"
+                        )
+                        .classList.add(
+                            "visible"
+                        );
+
+
+                    valid =
+                        false;
+
+
+                } else {
+
+
+                    topicSelect.classList.remove(
+                        "invalid"
+                    );
+
+
+                    document
+                        .getElementById(
+                            "topicError"
+                        )
+                        .classList.remove(
+                            "visible"
+                        );
+
+                }
+
+
+
+                /* ----------------------------------------------------
+                   QUIZART PRÜFEN
+                   ---------------------------------------------------- */
+
+                if (!selectedQuizType) {
+
+
+                    document
+                        .getElementById(
+                            "quizTypeError"
+                        )
+                        .classList.add(
+                            "visible"
+                        );
+
+
+                    valid =
+                        false;
+
+
+                } else {
+
+
+                    document
+                        .getElementById(
+                            "quizTypeError"
+                        )
+                        .classList.remove(
+                            "visible"
+                        );
+
+                }
+
+
+
+                if (!valid) {
+
+                    return;
+
+                }
+
+
+
+                /* ----------------------------------------------------
+                   AUSWAHL SPEICHERN
+                   ---------------------------------------------------- */
+
+                const quizSelection = {
+
+
+                    semester:
+                        semesterSelect.value,
+
+
+                    subject:
+                        subjectSelect.value,
+
+
+                    topic:
+                        topicSelect.value,
+
+
+                    questionCount:
+                        questionCounts[
+                            questionCountIndex
+                        ],
+
+
+                    quizType:
+                        selectedQuizType
+
+                };
+
+
+
+                sessionStorage.setItem(
+                    "quizSelection",
+                    JSON.stringify(
+                        quizSelection
+                    )
+                );
+
+
+
+                /* ----------------------------------------------------
+                   WEITER ZUR BESTEHENDEN QUIZSEITE
+                   ---------------------------------------------------- */
+
+                window.location.href =
+                    "quiz.html";
+
+            }
+        );
+
+
+
+        /* ============================================================
+           GLOBALER LOGOUT
+           ------------------------------------------------------------
+           header-global.html führt Firebase NICHT selbst aus.
+
+           Stattdessen sendet der globale Header das Event:
+
+               fiaeTrainerLogout
+
+           quizBit.html übernimmt hier weiterhin den tatsächlichen
+           Firebase-Logout.
+           ============================================================ */
+
+        window.addEventListener(
+            "fiaeTrainerLogout",
+            async () => {
+
+
+                try {
+
+
+                    await signOut(
+                        auth
+                    );
+
+
+                    window.location.replace(
+                        "login.html"
+                    );
+
+
+                } catch (error) {
+
+
+                    console.error(
+                        "Firebase Logout fehlgeschlagen:",
+                        error
+                    );
+
+
+                    alert(
+                        "Der Logout konnte nicht durchgeführt werden."
+                    );
+
+                }
+
+            }
+        );
+
+
+    </script>
+
+
+    <!-- ============================================================
+         FOOTER-SCRIPTS
+         ------------------------------------------------------------
+         Diese beiden Dateien gehören zur bereits funktionierenden
+         Footer-Integration und bleiben unverändert.
+         ============================================================ -->
+
+    <script src="/footer-config.js"></script>
+
+    <script
+        src="/footer-app.js"
+        defer>
+    </script>
+
+
+</body>
+
+</html>
