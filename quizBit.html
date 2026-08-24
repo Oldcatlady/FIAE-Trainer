@@ -377,7 +377,11 @@
 
 
         /* ============================================================
-           QUIZ TYPES
+           AUSWAHL-BUTTONS (QUIZART + LERNSTAND)
+           ------------------------------------------------------------
+           .quiz-types ist die gemeinsame Grid-Basis. Die Anzahl der
+           Spalten wird pro Container über eine eigene ID überschrieben,
+           da Quizart 3 und Lernstand 5 Optionen hat.
            ============================================================ */
 
         .quiz-types {
@@ -390,6 +394,17 @@
 
             gap:
                 12px;
+
+        }
+
+
+        #lernstandButtons {
+
+            grid-template-columns:
+                repeat(
+                    auto-fit,
+                    minmax(150px, 1fr)
+                );
 
         }
 
@@ -419,6 +434,9 @@
 
             font-weight:
                 600;
+
+            padding:
+                6px 8px;
 
         }
 
@@ -456,6 +474,24 @@
 
             cursor:
                 not-allowed;
+
+        }
+
+
+        /* ============================================================
+           LERNSTAND – LADEHINWEIS
+           ============================================================ */
+
+        #lernstandLoading {
+
+            font-size:
+                13px;
+
+            color:
+                var(--text-muted);
+
+            margin-bottom:
+                12px;
 
         }
 
@@ -660,6 +696,14 @@
             }
 
 
+            #lernstandButtons {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+
             .welcome h1 {
 
                 font-size:
@@ -684,9 +728,6 @@
 
 <body class="theme-einhorn auth-checking">
     <!-- ============================================================
-     GLOBALER HEADER
-     ============================================================ -->
-    <!-- ============================================================
          AUTHENTICATION LOADING
          ============================================================ -->
     <div id="authLoading">
@@ -709,8 +750,10 @@
 
          Diese Seite enthält KEINE eigene Header-Implementierung.
          ============================================================ -->
-         
+
     <div id="globalHeaderContainer"></div>
+
+
     <!-- ============================================================
          HAUPTINHALT
          ============================================================ -->
@@ -886,6 +929,106 @@
 
 
             <!-- ====================================================
+                 LERNSTAND (nur sichtbar nach Themenwahl)
+                 ------------------------------------------------------
+                 Diese Auswahl entscheidet, welcher Datenkanon aus der
+                 Fragen-Datenbank gezogen wird, basierend auf der
+                 bisherigen Statistik der Nutzerin zu diesem Thema.
+                 ==================================================== -->
+
+            <div
+                class="form-group"
+                id="lernstandGroup"
+                hidden>
+
+
+                <label>
+
+                    Welche Fragen möchtest du üben?
+
+                </label>
+
+
+                <p
+                    id="lernstandLoading"
+                    hidden>
+
+                    Lernstand wird geladen …
+
+                </p>
+
+
+                <div
+                    class="quiz-types"
+                    id="lernstandButtons">
+
+
+                    <button
+                        class="quiz-type"
+                        data-category="neu"
+                        disabled>
+
+                        Neue Fragen
+
+                    </button>
+
+
+                    <button
+                        class="quiz-type"
+                        data-category="hoch"
+                        disabled>
+
+                        Lernbedarf hoch
+
+                    </button>
+
+
+                    <button
+                        class="quiz-type"
+                        data-category="medium"
+                        disabled>
+
+                        Lernbedarf medium
+
+                    </button>
+
+
+                    <button
+                        class="quiz-type"
+                        data-category="gering"
+                        disabled>
+
+                        Lernbedarf gering
+
+                    </button>
+
+
+                    <button
+                        class="quiz-type"
+                        data-category="gemischt"
+                        disabled>
+
+                        Gemischte Fragen
+
+                    </button>
+
+
+                </div>
+
+
+                <div
+                    id="lernstandError"
+                    class="error-message">
+
+                    Bitte wähle aus, welche Fragen du üben möchtest.
+
+                </div>
+
+
+            </div>
+
+
+            <!-- ====================================================
                  FRAGENANZAHL
                  ==================================================== -->
 
@@ -1052,8 +1195,10 @@
          Firebase Authentication wird hier für das geschützte
          Dashboard verwendet.
 
-         Es wird KEINE questions.json geladen.
-         Es wird KEINE Quiz-Datenbank angesprochen.
+         Firestore wird jetzt zusätzlich verwendet, um:
+             - passende Fragen zu Semester/Fach/Thema zu zählen
+             - die Statistik der Nutzerin zu diesen Fragen zu lesen
+             - die 5 Lernstand-Buttons entsprechend freizuschalten
          ============================================================ -->
 
     <script type="module">
@@ -1110,12 +1255,6 @@
                     );
 
 
-                /*
-                 * ----------------------------------------------------
-                 * STYLE AUS GLOBALER HEADER-DATEI ÜBERNEHMEN
-                 * ----------------------------------------------------
-                 */
-
                 headerDocument
                     .querySelectorAll("style")
                     .forEach(
@@ -1136,15 +1275,6 @@
                         }
                     );
 
-
-                /*
-                 * ----------------------------------------------------
-                 * HTML DES GLOBALEN HEADERS ÜBERNEHMEN
-                 * ----------------------------------------------------
-                 *
-                 * Wir übernehmen alle sichtbaren Elemente aus dem
-                 * Body von header-global.html.
-                 */
 
                 Array.from(
                     headerDocument.body.children
@@ -1168,17 +1298,6 @@
                     }
                 );
 
-
-                /*
-                 * ----------------------------------------------------
-                 * JAVASCRIPT DES GLOBALEN HEADERS AUSFÜHREN
-                 * ----------------------------------------------------
-                 *
-                 * Script-Tags werden bei innerHTML/fetch nicht
-                 * automatisch ausgeführt.
-                 *
-                 * Deshalb wird das Script hier bewusst neu erzeugt.
-                 */
 
                 headerDocument
                     .querySelectorAll("script")
@@ -1226,10 +1345,6 @@
         }
 
 
-        /*
-         * Globalen Header laden.
-         */
-
         await loadGlobalHeader();
 
 
@@ -1258,6 +1373,20 @@
 
         import {
 
+            getFirestore,
+            collection,
+            query,
+            where,
+            getDocs,
+            doc,
+            getDoc
+
+        } from
+            "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+
+        import {
+
             firebaseConfig
 
         } from
@@ -1277,6 +1406,12 @@
 
         const auth =
             getAuth(
+                firebaseApp
+            );
+
+
+        const db =
+            getFirestore(
                 firebaseApp
             );
 
@@ -1324,24 +1459,37 @@
 
         const quizTypeButtons =
             document.querySelectorAll(
-                ".quiz-type"
+                ".quiz-types .quiz-type[data-type]"
+            );
+
+
+        const lernstandGroup =
+            document.getElementById(
+                "lernstandGroup"
+            );
+
+
+        const lernstandLoading =
+            document.getElementById(
+                "lernstandLoading"
+            );
+
+
+        const lernstandButtons =
+            document.querySelectorAll(
+                "#lernstandButtons .quiz-type"
+            );
+
+
+        const lernstandError =
+            document.getElementById(
+                "lernstandError"
             );
 
 
 
         /* ============================================================
            FIREBASE AUTHENTICATION GUARD
-           ------------------------------------------------------------
-           Das ist der entscheidende Schutz für quizBit.html.
-
-           Firebase entscheidet, ob aktuell ein Benutzer angemeldet
-           ist.
-
-           Angemeldet:
-               Dashboard anzeigen.
-
-           Nicht angemeldet:
-               Weiterleitung zu login.html.
            ============================================================ */
 
         onAuthStateChanged(
@@ -1360,20 +1508,10 @@
                 }
 
 
-                /*
-                 * Benutzer ist authentifiziert.
-                 * Jetzt darf das Dashboard sichtbar werden.
-                 */
-
                 document.body.classList.remove(
                     "auth-checking"
                 );
 
-
-                /*
-                 * Falls Firebase eine E-Mail liefert, verwenden wir
-                 * diese zunächst als persönliche Begrüßung.
-                 */
 
                 if (user.email) {
 
@@ -1391,11 +1529,10 @@
            TESTDATEN FÜR DIE AUSWAHL
            ------------------------------------------------------------
            Diese Daten dienen ausschließlich der Navigation innerhalb
-           des Dashboards.
+           des Dashboards (Semester → Fach → Thema).
 
-           Sie sind NICHT die spätere Quiz-Datenquelle.
-
-           Es wird hier ausdrücklich keine questions.json verwendet.
+           Die eigentlichen Fragen kommen NICHT von hier, sondern aus
+           der Firestore-Collection "questions".
            ============================================================ */
 
         const learningData = {
@@ -1548,6 +1685,9 @@
                     true;
 
 
+                verstecktLernstand();
+
+
                 if (!semester) {
 
                     subjectSelect.disabled =
@@ -1611,6 +1751,9 @@
                     '<option value="">Thema auswählen</option>';
 
 
+                verstecktLernstand();
+
+
                 if (!subject) {
 
                     topicSelect.disabled =
@@ -1655,6 +1798,545 @@
 
                         topicSelect.appendChild(
                             option
+                        );
+
+                    }
+                );
+
+            }
+        );
+
+
+
+        /* ============================================================
+           THEMA → LERNSTAND LADEN
+           ------------------------------------------------------------
+           Erst wenn ein Thema gewählt ist, wissen wir, welche Fragen
+           relevant sind. Deshalb wird die Lernstand-Auswahl erst hier
+           sichtbar und befüllt.
+           ============================================================ */
+
+        topicSelect.addEventListener(
+            "change",
+            async () => {
+
+
+                const topic =
+                    topicSelect.value;
+
+
+                if (!topic) {
+
+                    verstecktLernstand();
+
+                    return;
+
+                }
+
+
+                lernstandGroup.hidden =
+                    false;
+
+
+                await ladeLernstand(
+                    semesterSelect.value,
+                    subjectSelect.value,
+                    topic
+                );
+
+            }
+        );
+
+
+
+        /* ============================================================
+           LERNSTAND VERSTECKEN / ZURÜCKSETZEN
+           ------------------------------------------------------------
+           Wird aufgerufen, sobald Semester oder Fach geändert werden,
+           weil die bisherige Lernstand-Auswahl dann nicht mehr gültig
+           ist.
+           ============================================================ */
+
+        let selectedCategory =
+            null;
+
+
+        let currentQuestionIds = {
+
+            neu: [],
+            hoch: [],
+            medium: [],
+            gering: []
+
+        };
+
+
+        function verstecktLernstand() {
+
+            lernstandGroup.hidden =
+                true;
+
+
+            selectedCategory =
+                null;
+
+
+            lernstandButtons.forEach(
+                (button) => {
+
+                    button.classList.remove(
+                        "selected"
+                    );
+
+                    button.disabled =
+                        true;
+
+                }
+            );
+
+
+            lernstandError.classList.remove(
+                "visible"
+            );
+
+        }
+
+
+
+        /* ============================================================
+           MISCHEN (FISHER-YATES)
+           ------------------------------------------------------------
+           Mischt ein Array zufällig, ohne das Original zu verändern.
+           Wird sowohl für einzelne Kategorien als auch für die
+           "Gemischt"-Verteilung gebraucht.
+           ============================================================ */
+
+        function mischeZufaellig(array) {
+
+            const kopie =
+                [...array];
+
+
+            for (
+                let i = kopie.length - 1;
+                i > 0;
+                i--
+            ) {
+
+                const j =
+                    Math.floor(
+                        Math.random() * (i + 1)
+                    );
+
+
+                [
+                    kopie[i],
+                    kopie[j]
+                ] = [
+                    kopie[j],
+                    kopie[i]
+                ];
+
+            }
+
+
+            return kopie;
+
+        }
+
+
+
+        /* ============================================================
+           VERTEILUNG FÜR "GEMISCHTE FRAGEN"
+           ------------------------------------------------------------
+           Zieht so gleichmäßig wie möglich aus allen aktiven
+           Kategorien. Kategorien mit zu wenig Fragen werden komplett
+           übernommen, die übrigen Plätze wandern automatisch in
+           einen zweiten Durchgang und werden aus allem aufgefüllt,
+           was noch übrig ist.
+           ============================================================ */
+
+        function verteileGemischt(kategorien, gewuenschteAnzahl) {
+
+            const aktiveKategorien =
+                Object.values(kategorien)
+                    .filter(
+                        (arr) => arr.length > 0
+                    );
+
+
+            const anzahlKategorien =
+                aktiveKategorien.length;
+
+
+            if (anzahlKategorien === 0) {
+
+                return [];
+
+            }
+
+
+            let ausgewaehlt =
+                [];
+
+
+            let rest =
+                gewuenschteAnzahl;
+
+
+            const proKategorie =
+                Math.floor(
+                    gewuenschteAnzahl / anzahlKategorien
+                );
+
+
+            aktiveKategorien.forEach(
+                (pool) => {
+
+                    const genommen =
+                        mischeZufaellig(pool)
+                            .slice(0, proKategorie);
+
+
+                    ausgewaehlt.push(
+                        ...genommen
+                    );
+
+
+                    rest -=
+                        genommen.length;
+
+                }
+            );
+
+
+            if (rest > 0) {
+
+                const restPool =
+                    aktiveKategorien
+                        .flatMap(
+                            (pool) => pool.filter(
+                                (f) => !ausgewaehlt.includes(f)
+                            )
+                        );
+
+
+                ausgewaehlt.push(
+                    ...mischeZufaellig(restPool)
+                        .slice(0, rest)
+                );
+
+            }
+
+
+            return mischeZufaellig(
+                ausgewaehlt
+            );
+
+        }
+
+
+
+        /* ============================================================
+           FRAGENAUSWAHL FÜR DEN QUIZ-START
+           ------------------------------------------------------------
+           Baut anhand der gewählten Kategorie und der gewünschten
+           Fragenanzahl die konkrete Liste an Fragen-IDs, die an
+           quiz.html übergeben wird.
+
+           "gemischt"  → verteileGemischt() über alle Kategorien
+           alle anderen → einfach zufällig aus der jeweiligen
+                          Kategorie ziehen, ggf. begrenzt auf
+                          gewuenschteAnzahl
+           ============================================================ */
+
+        function ermittleQuestionIds(kategorie, gewuenschteAnzahl) {
+
+            if (kategorie === "gemischt") {
+
+                return verteileGemischt(
+                    currentQuestionIds,
+                    gewuenschteAnzahl
+                );
+
+            }
+
+
+            return mischeZufaellig(
+                currentQuestionIds[kategorie]
+            ).slice(0, gewuenschteAnzahl);
+
+        }
+
+
+
+        /* ============================================================
+           LERNSTAND LADEN
+           ------------------------------------------------------------
+           1. Alle Fragen zu Semester/Fach/Thema aus "questions" holen.
+           2. Für jede Frage die Statistik der Nutzerin aus
+              "users/{uid}/questionStats/{questionId}" holen.
+           3. Jede Frage genau einer Kategorie zuordnen:
+                  - kein Statistik-Dokument ODER timesPlayed === 0
+                    → "neu"
+                  - wrongPercent >= 70            → "hoch"
+                  - wrongPercent >= 30 und < 70    → "medium"
+                  - wrongPercent < 30              → "gering"
+           4. Buttons freischalten, wenn die jeweilige Kategorie
+              mindestens 1 Frage enthält. "Gemischt" ist freigeschaltet,
+              sobald irgendeine Frage insgesamt vorhanden ist.
+           ============================================================ */
+
+        async function ladeLernstand(semester, subject, topic) {
+
+            currentQuestionIds = {
+
+                neu: [],
+                hoch: [],
+                medium: [],
+                gering: []
+
+            };
+
+
+            selectedCategory =
+                null;
+
+
+            lernstandButtons.forEach(
+                (button) => {
+
+                    button.classList.remove(
+                        "selected"
+                    );
+
+                    button.disabled =
+                        true;
+
+                }
+            );
+
+
+            lernstandError.classList.remove(
+                "visible"
+            );
+
+
+            const user =
+                auth.currentUser;
+
+
+            if (!user) {
+
+                return;
+
+            }
+
+
+            lernstandLoading.hidden =
+                false;
+
+
+            try {
+
+
+                /*
+                 * ------------------------------------------------
+                 * 1. PASSENDE FRAGEN LADEN
+                 * ------------------------------------------------
+                 */
+
+                const fragenQuery =
+                    query(
+                        collection(db, "questions"),
+                        where("semester", "==", semester),
+                        where("subject", "==", subject),
+                        where("topic", "==", topic)
+                    );
+
+
+                const fragenSnapshot =
+                    await getDocs(
+                        fragenQuery
+                    );
+
+
+                /*
+                 * ------------------------------------------------
+                 * 2. + 3. STATISTIK PRO FRAGE PRÜFEN UND EINORDNEN
+                 * ------------------------------------------------
+                 */
+
+                for (const fragenDoc of fragenSnapshot.docs) {
+
+
+                    const questionId =
+                        fragenDoc.id;
+
+
+                    const statsRef =
+                        doc(
+                            db,
+                            "users",
+                            user.uid,
+                            "questionStats",
+                            questionId
+                        );
+
+
+                    const statsSnap =
+                        await getDoc(
+                            statsRef
+                        );
+
+
+                    if (
+                        !statsSnap.exists() ||
+                        statsSnap.data().timesPlayed === 0
+                    ) {
+
+                        currentQuestionIds.neu.push(
+                            questionId
+                        );
+
+                        continue;
+
+                    }
+
+
+                    const {
+                        timesPlayed,
+                        timesWrong
+                    } = statsSnap.data();
+
+
+                    const wrongPercent =
+                        (timesWrong / timesPlayed) * 100;
+
+
+                    if (wrongPercent >= 70) {
+
+                        currentQuestionIds.hoch.push(
+                            questionId
+                        );
+
+                    } else if (wrongPercent >= 30) {
+
+                        currentQuestionIds.medium.push(
+                            questionId
+                        );
+
+                    } else {
+
+                        currentQuestionIds.gering.push(
+                            questionId
+                        );
+
+                    }
+
+                }
+
+
+                /*
+                 * ------------------------------------------------
+                 * 4. BUTTONS FREISCHALTEN
+                 * ------------------------------------------------
+                 */
+
+                const gesamtAnzahl =
+                    currentQuestionIds.neu.length +
+                    currentQuestionIds.hoch.length +
+                    currentQuestionIds.medium.length +
+                    currentQuestionIds.gering.length;
+
+
+                lernstandButtons.forEach(
+                    (button) => {
+
+
+                        const kategorie =
+                            button.dataset.category;
+
+
+                        if (kategorie === "gemischt") {
+
+                            button.disabled =
+                                gesamtAnzahl === 0;
+
+                        } else {
+
+                            button.disabled =
+                                currentQuestionIds[kategorie].length === 0;
+
+                        }
+
+                    }
+                );
+
+
+            } catch (error) {
+
+
+                console.error(
+                    "Lernstand konnte nicht geladen werden:",
+                    error
+                );
+
+
+            } finally {
+
+
+                lernstandLoading.hidden =
+                    true;
+
+            }
+
+        }
+
+
+
+        /* ============================================================
+           LERNSTAND-AUSWAHL PER KLICK
+           ============================================================ */
+
+        lernstandButtons.forEach(
+            (button) => {
+
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+
+                        if (button.disabled) {
+
+                            return;
+
+                        }
+
+
+                        lernstandButtons.forEach(
+                            (btn) => {
+
+                                btn.classList.remove(
+                                    "selected"
+                                );
+
+                            }
+                        );
+
+
+                        button.classList.add(
+                            "selected"
+                        );
+
+
+                        selectedCategory =
+                            button.dataset.category;
+
+
+                        lernstandError.classList.remove(
+                            "visible"
                         );
 
                     }
@@ -1818,13 +2500,13 @@
         /* ============================================================
            QUIZ STARTEN
            ------------------------------------------------------------
-           Hier wird noch keine Quizlogik ausgeführt.
+           Das Dashboard übergibt Semester/Fach/Thema, die gewählte
+           Lernstand-Kategorie, die Fragenanzahl und die Quizart an
+           quiz.html.
 
-           Das Dashboard übergibt ausschließlich die vom Benutzer
-           getroffene Auswahl an quiz.html.
-
-           Die eigentlichen Fragen werden später über die Datenbank
-           bereitgestellt.
+           quiz.html muss die eigentliche Fragenauswahl (inkl. der
+           "Gemischt"-Verteilungslogik) noch selbst umsetzen –
+           das ist hier noch nicht enthalten.
            ============================================================ */
 
         startQuiz.addEventListener(
@@ -1836,10 +2518,6 @@
                     true;
 
 
-
-                /* ----------------------------------------------------
-                   FACH PRÜFEN
-                   ---------------------------------------------------- */
 
                 if (!subjectSelect.value) {
 
@@ -1882,10 +2560,6 @@
 
 
 
-                /* ----------------------------------------------------
-                   THEMA PRÜFEN
-                   ---------------------------------------------------- */
-
                 if (!topicSelect.value) {
 
 
@@ -1927,9 +2601,28 @@
 
 
 
-                /* ----------------------------------------------------
-                   QUIZART PRÜFEN
-                   ---------------------------------------------------- */
+                if (!selectedCategory) {
+
+
+                    lernstandError.classList.add(
+                        "visible"
+                    );
+
+
+                    valid =
+                        false;
+
+
+                } else {
+
+
+                    lernstandError.classList.remove(
+                        "visible"
+                    );
+
+                }
+
+
 
                 if (!selectedQuizType) {
 
@@ -1970,9 +2663,18 @@
 
 
 
-                /* ----------------------------------------------------
-                   AUSWAHL SPEICHERN
-                   ---------------------------------------------------- */
+                const gewuenschteAnzahl =
+                    questionCounts[
+                        questionCountIndex
+                    ];
+
+
+                const questionIds =
+                    ermittleQuestionIds(
+                        selectedCategory,
+                        gewuenschteAnzahl
+                    );
+
 
                 const quizSelection = {
 
@@ -1989,10 +2691,16 @@
                         topicSelect.value,
 
 
+                    category:
+                        selectedCategory,
+
+
                     questionCount:
-                        questionCounts[
-                            questionCountIndex
-                        ],
+                        gewuenschteAnzahl,
+
+
+                    questionIds:
+                        questionIds,
 
 
                     quizType:
@@ -2011,10 +2719,6 @@
 
 
 
-                /* ----------------------------------------------------
-                   WEITER ZUR BESTEHENDEN QUIZSEITE
-                   ---------------------------------------------------- */
-
                 window.location.href =
                     "quiz.html";
 
@@ -2025,15 +2729,6 @@
 
         /* ============================================================
            GLOBALER LOGOUT
-           ------------------------------------------------------------
-           header-global.html führt Firebase NICHT selbst aus.
-
-           Stattdessen sendet der globale Header das Event:
-
-               fiaeTrainerLogout
-
-           quizBit.html übernimmt hier weiterhin den tatsächlichen
-           Firebase-Logout.
            ============================================================ */
 
         window.addEventListener(
@@ -2078,9 +2773,6 @@
 
     <!-- ============================================================
          FOOTER-SCRIPTS
-         ------------------------------------------------------------
-         Diese beiden Dateien gehören zur bereits funktionierenden
-         Footer-Integration und bleiben unverändert.
          ============================================================ -->
 
     <script src="/footer-config.js"></script>
